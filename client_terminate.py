@@ -25,7 +25,7 @@ while 1:
         print 'could not open socket'
         sys.exit(1)
     time.sleep(2)
-    s.sendall('HELO text\n')
+    s.sendall('TERMINATE\n')
     data = s.recv(1024)
     s.close()
     print 'Received', repr(data)

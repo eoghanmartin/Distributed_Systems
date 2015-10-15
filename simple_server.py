@@ -1,39 +1,21 @@
-# Echo server program
-import concurrent.futures
-import socket
-import sys
+#!/usr/bin/env python 
 
-HOST = None
-PORT = 8000
-s = None
+""" 
+A simple echo server 
+""" 
 
-while 1:
-    for res in socket.getaddrinfo(_host, _port, socket.AF_UNSPEC,
-                                  socket.SOCK_STREAM, 0, socket.AI_PASSIVE):
-        af, socktype, proto, canonname, sa = res
-        try:
-            sock = socket.socket(af, socktype, proto)
-        except socket.error as msg:
-            sock = None
-            continue
-        try:
-            s.bind(sa)
-            s.listen(1)
-        except socket.error as msg:
-            s.close()
-            s = None
-            continue
-        break
-    if s is None:
-        print 'could not open socket'
-        sys.exit(1)
-    conn, addr = s.accept()
-    print 'Connected by', addr
-    while 1:
-        data = conn.recv(1024)
-        if not data: break
-        print data
-        conn.send(data)
-        print 'data sent'
+import socket 
 
-    conn.close()
+host = '' 
+port = 8000 
+backlog = 5 
+size = 1024 
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+s.bind((host,port)) 
+s.listen(backlog) 
+while 1: 
+    client, address = s.accept() 
+    data = client.recv(size) 
+    if data: 
+        client.send(data) 
+    client.close()
