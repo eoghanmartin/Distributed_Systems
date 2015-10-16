@@ -5,24 +5,17 @@ if __name__ == '__main__':
     import sys
     execfile("threadpool.py")
 
-    def do_something(data):
+    def use_client(data):
         while 1:
             time.sleep(1)
             client, address = s.accept()
-            data = client.recv(size) 
+            data = client.recv(size)
             if data == "HELO text\n":
-                client.send("HELO text\nIP:[ip address]\nPort:[port number]\nStudentID:[your student ID]\n")
-            print("**** Result from request #%s: " % (data))
+                client.send("HELO text\nIP: " + str(address) + "\nPort: " + str(port) + "\nStudentID: " + studentID + "\n")
+            print("Result from request: %s" % (data))
             client.close()
 
-    def handle_exception(request, exc_info):
-        if not isinstance(exc_info, tuple):
-            print(request)
-            print(exc_info)
-            raise SystemExit
-        print("**** Exception occured in request #%s: %s" % \
-          (request.requestID, exc_info))
-
+    studentID = '677cfc77e52778a3d5741cb5d5f358c537c28f5134d63e4b7f8376f73315922c'
     host = '' 
     port = 8000 
     backlog = 5 
@@ -30,12 +23,10 @@ if __name__ == '__main__':
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
     s.bind((host,port)) 
     s.listen(backlog)
-
     socket = [s]
 
-    requests = makeRequests(do_something, socket, handle_exception)
+    requests = makeRequests(use_client, socket)
 
-    print("Creating thread pool with 2 worker threads.")
     main = ThreadPool(5)
 
     for req in requests:
@@ -44,21 +35,16 @@ if __name__ == '__main__':
 
     i = 0
     while True:
-        try:
-            time.sleep(0.5)
-            main.poll()
-            print("Main thread working...")
-            print("(active worker threads: %i)" % (threading.activeCount()-1, ))
-            if i == 20:
-                print("**** Dismissing 2 worker threads...")
-                main.dismissWorkers(2)
+        time.sleep(0.5)
+        main.poll()
+        if i < 10:
+            print("Adding a worker thread...")
+            main.createWorkers(1)
             i += 1
-        except KeyboardInterrupt:
-            print("**** Interrupted!")
-            break
-        except NoResultsPending:
-            print("**** No pending results.")
-            break
+        #if i == 10:
+         #   print("Dismissing 2 worker threads...")
+          #  main.dismissWorkers(2)
+
     if main.dismissedWorkers:
         print("Joining all dismissed worker threads...")
         main.joinAllDismissedWorkers()
