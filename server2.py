@@ -6,14 +6,14 @@ if __name__ == '__main__':
     execfile("threadpool.py")
 
     def do_something(data):
-        while data != "TERMINATE\n":
+        while 1:
             time.sleep(1)
             client, address = s.accept()
             data = client.recv(size) 
             if data == "HELO text\n":
                 client.send("HELO text\nIP:[ip address]\nPort:[port number]\nStudentID:[your student ID]\n")
             print("**** Result from request #%s: " % (data))
-        client.close()
+            client.close()
 
     def handle_exception(request, exc_info):
         if not isinstance(exc_info, tuple):
@@ -49,9 +49,6 @@ if __name__ == '__main__':
             main.poll()
             print("Main thread working...")
             print("(active worker threads: %i)" % (threading.activeCount()-1, ))
-            #if i == 1:
-                #print("**** Adding 3 more worker threads...")
-                #main.createWorkers(3)
             if i == 20:
                 print("**** Dismissing 2 worker threads...")
                 main.dismissWorkers(2)
