@@ -9,6 +9,7 @@ if __name__ == '__main__':
 
     def use_client(data):
         global exit
+        print threading.current_thread()
         while 1:
             time.sleep(1)
             client, address = s.accept()
@@ -18,6 +19,7 @@ if __name__ == '__main__':
                 exit = 1
             if data == "HELO text\n":
                 client.send("HELO text\nIP: " + str(address) + "\nPort: " + str(port) + "\nStudentID: " + studentID + "\n")
+                print threading.current_thread()
             print("Result from request: %s" % (data))
             client.close()
 
@@ -30,11 +32,15 @@ if __name__ == '__main__':
     port = int(sys.argv[1])
     backlog = 5 
     size = 1024
+    threads = 5
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
     s.bind((host,port)) 
     s.listen(backlog)
     sock = [s]
+
+    main = ThreadPool(threads)
+    main.createWorkers(threads)
 
     i = 0
 
@@ -46,18 +52,12 @@ if __name__ == '__main__':
 
         else:
             requests = makeRequests(use_client, sock)
-            main = ThreadPool(5)
             for req in requests:
                 main.putRequest(req)
-                print("Work request #%s added." % req.requestID)
+                #print("Work request #%s added." % req.requestID)
             time.sleep(0.5)
             main.poll()
-            if i < 10:
-                print("Adding a worker thread...")
-                main.createWorkers(1)
-                i += 1
         s.close
-
     if main.dismissedWorkers:
         print("Joining all dismissed worker threads...")
         main.joinAllDismissedWorkers()

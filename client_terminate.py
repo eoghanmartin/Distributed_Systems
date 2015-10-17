@@ -25,7 +25,7 @@ while 1:
         print 'could not open socket'
         sys.exit(1)
     time.sleep(2)
-    s.sendall('TERMINATE\n')
+    s.sendall('KILL_SERVICE\n')
     data = s.recv(1024)
     s.close()
     print 'Received', repr(data)
