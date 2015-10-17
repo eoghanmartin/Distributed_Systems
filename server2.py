@@ -23,10 +23,6 @@ if __name__ == '__main__':
             print("Result from request: %s" % (data))
             client.close()
 
-    def terminate(data):
-        print("Joining all dismissed worker threads...")
-        main.joinAllDismissedWorkers()
-
     studentID = '677cfc77e52778a3d5741cb5d5f358c537c28f5134d63e4b7f8376f73315922c'
     host = '' 
     port = int(sys.argv[1])
@@ -47,7 +43,6 @@ if __name__ == '__main__':
     while True:
 
         if exit == 1:
-            requests = makeRequests(terminate, sock)
             sys.exit()
 
         else:
