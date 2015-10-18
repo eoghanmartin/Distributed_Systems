@@ -1,2 +1,5 @@
 #!/bin/sh
-python server.py 8000
+
+if [ "$1" != "" ]; then
+	python server.py $1
+fi
