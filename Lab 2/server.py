@@ -14,12 +14,15 @@ if __name__ == '__main__':
             time.sleep(1)
             client, address = s.accept()
             data = client.recv(size)
-            if data == "KILL_SERVICE\n":
+            if "KILL_SERVICE" in data:
                 print "closing..."
                 exit = 1
-            if data == "HELO text\n":
-                client.send("HELO text\nIP: " + str(address) + "\nPort: " + str(port) + "\nStudentID: " + studentID + "\n")
-                print threading.current_thread()
+            if "HELO" in data:
+                print(data +"IP: " + str(address) + "\nPort: " + str(port) + "\nStudentID: " + studentID + "\n")
+                client.send(data + "IP: " + socket.gethostbyname(socket.gethostname()) + "\nPort: " + str(port) + "\nStudentID: " + studentID + "\n")
+                #print threading.current_thread()
+            if "JOIN_CHATROOM" in data:
+                client.send("JOINED_CHATROOM: room1\nSERVER_IP: " + socket.gethostbyname(socket.gethostname()) + "\nPORT: 0\nROOM_REF: 1\nJOIN_ID: 1\n")
             print("Result from request: %s" % (data))
             client.close()
 
