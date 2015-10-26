@@ -20,10 +20,15 @@ if __name__ == '__main__':
                 print ("closing...")
                 exit = 1
             if "HELO" in data:
+<<<<<<< HEAD
                 print(data + "IP: " + socket.gethostbyname(socket.gethostname()) + "\nPort: " + str(port) + "\nStudentID: " + studentID + "\n")
                 client.send(data + "IP: " + socket.gethostbyname(socket.gethostname()) + "\nPort: " + str(port) + "\nStudentID: " + studentID + "\n")
             if "JOIN_CHATROOM" in data:
                 client.send("JOINED_CHATROOM: room1\nSERVER_IP: " + socket.gethostbyname(socket.gethostname()) + "\nPORT: 0\nROOM_REF: 1\nJOIN_ID: 1\n")
+=======
+                #print(data +"IP: " + str(address) + "\nPort: " + str(port) + "\nStudentID: " + studentID + "\n")
+                client.send(data + "IP:" + socket.gethostbyname(socket.gethostname()) + "\nPort: " + str(port) + "\nStudentID: " + studentID)
+>>>>>>> origin/master
             print("Result from request: %s" % (data))
             client.close()
 
