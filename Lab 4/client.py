@@ -3,6 +3,7 @@ import socket
 import sys
 import time
 import re
+import select
 
 HOST = 'localhost'
 PORT = 8000
@@ -38,10 +39,13 @@ while 1:
         sys.exit(1)
 
     command = raw_input('Enter client command: ')
+    #command = "placeholder"
+    #recieve = True
 
     if "JOIN_CHATROOM" in command:
         chatroom = re.sub('JOIN_CHATROOM ', '', command)
         s.sendall('JOIN_CHATROOM: ' + chatroom +'\nCLIENT_IP: 0\nPORT: 0\nCLIENT_NAME: ' + CLIENT_NAME + '\n')
+        sys.stdout.write('SEND_MESSAGE '); sys.stdout.flush()
         recieve = True
 
     if "SEND_MESSAGE" in command:
@@ -57,6 +61,30 @@ while 1:
         recieve = True
 
     if recieve == True:
+     #   while 1:
+       #     socket_list = [sys.stdin, s]
+        #    # Get the list sockets which are readable
+         #   read_sockets, write_sockets, error_sockets = select.select(socket_list , [], [])
+          #  print ("test")
+           # for sock in read_sockets: 
+            #    if sock == s:
+             #       print ("sock found!")
+              #      # incoming message from remote server, s
+               #     data = sock.recv(4096)
+                #    if not data :
+                 #       print '\nDisconnected from chat server'
+                  #      sys.exit()
+                   # else :
+                    #    #print data
+                     #   sys.stdout.write(data)
+                      #  sys.stdout.write('SEND_MESSAGE '); sys.stdout.flush()     
+                #
+                #else :
+                 #   # user entered a message
+                  #  msg = sys.stdin.readline()
+                   # s.send(msg)
+                    #sys.stdout.write('SEND_MESSAGE '); sys.stdout.flush() 
+
         data = s.recv(1024)
 
         if "JOINED_CHATROOM:" in data:
