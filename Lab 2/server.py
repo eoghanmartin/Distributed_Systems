@@ -8,7 +8,11 @@ import re
 exit = 0
 
 if __name__ == '__main__':
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> origin/master
     def use_client(data):
         global exit
 
@@ -30,6 +34,7 @@ if __name__ == '__main__':
                 exit = 1
             if "HELO" in data:
                 print(data + "IP: " + socket.gethostbyname(socket.gethostname()) + "\nPort: " + str(port) + "\nStudentID: " + studentID + "\n")
+<<<<<<< HEAD
                 client.send(data + "IP: " + socket.gethostbyname(socket.gethostname()) + "\nPort: " + str(port) + "\nStudentID: " + studentID + "\n")
             if "JOIN_CHATROOM:" in data:
                 join_lines = data.split('\n')
@@ -62,6 +67,10 @@ if __name__ == '__main__':
                 CHATROOM_NAME = re.sub('JOIN_ID: ', '', join_lines[1])
                 CLIENT_NAME = re.sub('CLIENT_NAME: ', '', join_lines[2])
                 connected = True
+=======
+                client.send(data + "IP:" + socket.gethostbyname(socket.gethostname()) + "\nPort: " + str(port) + "\nStudentID: " + studentID)
+            print("Result from request: %s" % (data))
+>>>>>>> origin/master
             client.close()
 
         while 1:
@@ -92,6 +101,7 @@ if __name__ == '__main__':
     while True:
 
         if exit == 1:
+            main.joinAllDismissedWorkers()
             sys.exit()
 
         else:
