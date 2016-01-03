@@ -6,16 +6,16 @@ if __name__ == "__main__":
 
     myProxyObject = Proxy()
 
-    data = myProxyObject.open('file3.txt', 2000, 'localhost')
-
+    data = myProxyObject.delete('file5.txt', 2000, 'localhost')
     print('Received', repr(data))
 
-    #data = myProxyObject.create('file4.txt', 2000, 'localhost')
+    data = myProxyObject.open('file1.txt', 2000, 'localhost')
+    print('Received', repr(data))
 
+    #data = myProxyObject.create('file5.txt', 2000, 'localhost')
     #print('Create', repr(data))
 
     #data = myProxyObject.write('file3.txt', 'new text\n', 2000, 'localhost')
-
     #print('Write', repr(data))
 
 
