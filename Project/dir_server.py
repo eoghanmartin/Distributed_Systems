@@ -26,6 +26,7 @@ class SingleTCPHandler(SocketServer.BaseRequestHandler):
         if "OPEN_" in data:
             print('SEARCHING FOR FILE...\n')
             print (HASHED_FILE_FILES)
+            print (HASHED_FILE_LOCKS)
             hashedFileName = str(hash(commands[1]))
             file_port = self.getPort(hashedFileName)
             file_host = self.getAddress(hashedFileName)
@@ -55,7 +56,7 @@ class SingleTCPHandler(SocketServer.BaseRequestHandler):
             file_port = self.getPort(hashedFileName)
             file_host = self.getAddress(hashedFileName)
             if file_port != '' and file_host != '':
-                lock_set = self.setLock(file_port, file_host)
+                lock_set = self.setLock(file_port, file_host, hashedFileName)
                 if lock_set == True:
                     returnData = hashedFileName + '\n' + file_host + '\n' + file_port
                     print ('DELETING: ' + returnData)
@@ -76,12 +77,13 @@ class SingleTCPHandler(SocketServer.BaseRequestHandler):
             file_port = self.getPort(hashedFileName)
             file_host = self.getAddress(hashedFileName)
             if file_port != '' and file_host != '':
-                lock_clear = self.clearLock(file_port, file_host)
+                lock_clear = self.clearLock(file_port, file_host, hashedFileName)
                 if lock_clear == True:
                     returnData = 'OK\n'
                     print ('DELETING: ' + returnData)
                     print (HASHED_FILE_LOCKS)
                     print (HASHED_FILE_FILES)
+                    removeFileDeleted(hashedFileName, file_port, file_host)
                     self.request.send(returnData)
                 else:
                     print('ERROR: (Delete) Problem with locking file.\n')
@@ -97,10 +99,11 @@ class SingleTCPHandler(SocketServer.BaseRequestHandler):
             file_port = self.getPort(hashedFileName)
             file_host = self.getAddress(hashedFileName)
             if file_port != '' and file_host != '':
-                lock_set = self.setLock(file_port, file_host)
+                lock_set = self.setLock(file_port, file_host, hashedFileName)
                 if lock_set == True:
                     returnData = hashedFileName + '\n' + file_host + '\n' + file_port
                     print ('FOUND AND LOCKED FILE: ' + returnData)
+                    print (HASHED_FILE_LOCKS)
                     self.request.send(returnData)
                 else:
                     print('ERROR: (Write) Problem with locking file.\n')
@@ -116,11 +119,11 @@ class SingleTCPHandler(SocketServer.BaseRequestHandler):
             file_port = self.getPort(hashedFileName)
             file_host = self.getAddress(hashedFileName)
             if file_port != '' and file_host != '':
-                lock_clear = self.clearLock(file_port, file_host)
+                lock_clear = self.clearLock(file_port, file_host, hashedFileName)
                 if lock_clear == True:
                     returnData = hashedFileName + '\n' + file_host + '\n' + file_port
                     print ('FOUND AND UNLOCKED FILE: ' + returnData)
-                    self.request.send(returnData)
+                    self.request.send('OK')
                 else:
                     print('ERROR: (Written) Problem with unlocking file.\n')
                     self.request.send("ERROR: (Written) Problem with unlocking file.\n")
@@ -154,27 +157,32 @@ class SingleTCPHandler(SocketServer.BaseRequestHandler):
                     i = i + 1
         return ''
 
-    def setLock(self, port, host):
+    def setLock(self, port, host, name):
         y = 0
+        #pdb.set_trace()
         for a in HASHED_FILE_ADDRESSES:
             if a == host:
                 p = HASHED_FILE_PORTS[y]
                 if p == port:
-                    if HASHED_FILE_LOCKS[y] == 0:
-                        HASHED_FILE_LOCKS[y] = 1
-                        return True
+                    f = HASHED_FILE_FILES[y]
+                    if f == name:
+                        if HASHED_FILE_LOCKS[y] == 0:
+                            HASHED_FILE_LOCKS[y] = 1
+                            return True
             y=y+1
         return False
 
-    def clearLock(self, port, host):
+    def clearLock(self, port, host, name):
         y = 0
         for a in HASHED_FILE_ADDRESSES:
             if a == host:
                 p = HASHED_FILE_PORTS[y]
                 if p == port:
-                    if HASHED_FILE_LOCKS[y] == 1:
-                        HASHED_FILE_LOCKS[y] = 0
-                        return True
+                    f = HASHED_FILE_FILES[y]
+                    if f == name:
+                        if HASHED_FILE_LOCKS[y] == 1:
+                            HASHED_FILE_LOCKS[y] = 0
+                            return True
             y=y+1
         return False
 
@@ -198,6 +206,22 @@ def newFileCreated(newFileName, newFileHost, newFilePort, fileDetailsFile):
     fileDetails.close()
     HASHED_FILE_LOCKS.append(0)
     setupFilesList(fileDetailsFile)
+
+def removeFileDeleted(hashedFileName, file_port, file_host):
+    with open('FileDetails.txt') as fileIn:
+        file_details = fileIn.readlines()
+    for f in file_details:
+        if hashedFileName in f:
+            file_details.remove(f)
+    fileIn.close()
+    #pdb.set_trace()
+    fileInAgain = open('FileDetails.txt', 'w')
+    fileInAgain.truncate()
+    for f in file_details:
+        fileInAgain.write(f)
+    fileInAgain.close()
+    setupFilesList('FileDetails.txt')
+            
 
 def setupFilesList(fileDetailsFile):
     global WRITE_ADDRESS

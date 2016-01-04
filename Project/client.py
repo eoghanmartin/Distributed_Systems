@@ -6,19 +6,19 @@ if __name__ == "__main__":
 
     myProxyObject = Proxy()
 
-    data = myProxyObject.create('file.txt', 2000, 'localhost')
-    print('Received', repr(data))
+    #data = myProxyObject.create('file1.txt', 2000, 'localhost')
+    #print('Received', repr(data))
 
-    data = myProxyObject.open('file.txt', 2000, 'localhost')
-    print('Received', repr(data))
+    #data = myProxyObject.open('file.txt', 2000, 'localhost')
+    #print('Received', repr(data))
 
-    data = myProxyObject.write('file.txt', 2000, 'localhost', "here's some text")
-    print('Write', repr(data))
-
-    data = myProxyObject.open('file.txt', 2000, 'localhost')
-    print('Received', repr(data))
-
-    #data = myProxyObject.write('file3.txt', 'new text\n', 2000, 'localhost')
+    #data = myProxyObject.write('file1.txt', 2000, 'localhost', "testeroony")
     #print('Write', repr(data))
+
+    data = myProxyObject.open('file1.txt', 2000, 'localhost')
+    print('Open', repr(data))
+
+    #data = myProxyObject.delete('file1.txt', 2000, 'localhost')
+    #print('Delete', repr(data))
 
 

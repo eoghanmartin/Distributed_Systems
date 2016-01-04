@@ -68,6 +68,7 @@ class Proxy():
         print('Connection to dir server made.\n')
         self.delete_s.sendall('DELETE_\n' + fileName)
         data = self.delete_s.recv(1024)
+        self.delete_s.close()
         if 'ERROR:' in data:
             print(data)
             return 'ERROR: Could not delete file.\n'
@@ -84,10 +85,9 @@ class Proxy():
                 if 'OK' in file_data:
                     print('FILE DELETED.\n')
                     print ('CLEANING UP')
-                    self.delete_s.sendall('DELETED_\n' + fileName)
-                    data = self.delete_s.recv(1024)
+                    resendData = 'DELETED_\n' + fileName
+                    data = self.__resendToDirServer(resendData, host, port)
                     if 'OK' in data:
-                        self.delete_s.close()
                         return 'OK'
                     else:
                         data = self.delete_s.sendall('DELETE_FAIL\n' + fileName)
@@ -108,6 +108,7 @@ class Proxy():
         print('Connection to dir server made.\n')
         self.write_s.sendall('WRITE_\n' + fileName)
         data = self.write_s.recv(1024)
+        self.write_s.close()
         if 'ERROR:' in data:
             print(data)
             return 'ERROR: Could not find file.\n'
@@ -124,10 +125,9 @@ class Proxy():
                 if 'OK' in file_data:
                     print('FILE WRITTEN.\n')
                     print ('CLEANING UP')
-                    self.write_s.sendall('WRITTEN_\n' + fileName)
-                    data = self.write_s.recv(1024)
+                    resendData = 'WRITTEN_\n' + fileName
+                    data = self.__resendToDirServer(resendData, host, port)
                     if 'OK' in data:
-                        self.write_s.close()
                         return 'OK'
                     else:
                         '''
@@ -151,4 +151,13 @@ class Proxy():
         self.fileServer_s.sendall(data)
         file_data = self.fileServer_s.recv(1024)
         self.fileServer_s.close()
+        return file_data
+
+    def __resendToDirServer(self, data, host, port):
+        self.dirServer_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.dirServer_s.connect((host, port))
+        print ('Connected to file server.\n')
+        self.dirServer_s.sendall(data)
+        file_data = self.dirServer_s.recv(1024)
+        self.dirServer_s.close()
         return file_data
