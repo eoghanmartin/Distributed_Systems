@@ -1,10 +1,13 @@
 import socket, pdb
 
 class Proxy():
+
+    dirPort = 2000
+    dirHost = 'localhost'
     
-    def open(self, fileName, port, host):
+    def open(self, fileName):
         self.open_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.open_s.connect((host, port))
+        self.open_s.connect((dirHost, dirPort))
         print('Connection to dir server made.\n')
         self.open_s.sendall('OPEN_\n' + fileName)
         data = self.open_s.recv(1024)
@@ -31,10 +34,10 @@ class Proxy():
             else:
                 return 'ERROR: returned - ' + data
 
-    def create(self, fileName, port, host):
+    def create(self, fileName):
         print('CREATING FILE...\n')
         self.create_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.create_s.connect((host, port))
+        self.create_s.connect((dirHost, dirPort))
         print('Connection to dir server made.\n')
         self.create_s.sendall('CREATE_\n' + fileName)
         data = self.create_s.recv(1024)
@@ -61,10 +64,10 @@ class Proxy():
             else:
                 return 'ERROR: returned - ' + data
 
-    def delete(self, fileName, port, host):
+    def delete(self, fileName):
         print('DELETING FILE...\n')
         self.delete_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.delete_s.connect((host, port))
+        self.delete_s.connect((dirHost, dirPort))
         print('Connection to dir server made.\n')
         self.delete_s.sendall('DELETE_\n' + fileName)
         data = self.delete_s.recv(1024)
@@ -86,7 +89,7 @@ class Proxy():
                     print('FILE DELETED.\n')
                     print ('CLEANING UP')
                     resendData = 'DELETED_\n' + fileName
-                    data = self.__resendToDirServer(resendData, host, port)
+                    data = self.__resendToDirServer(resendData)
                     if 'OK' in data:
                         return 'OK'
                     else:
@@ -101,10 +104,10 @@ class Proxy():
             else:
                 return 'ERROR: returned - ' + data
 
-    def write(self, fileName, port, host, content):
+    def write(self, fileName, content):
         print('WRITING FILE...\n')
         self.write_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.write_s.connect((host, port))
+        self.write_s.connect((dirHost, dirPort))
         print('Connection to dir server made.\n')
         self.write_s.sendall('WRITE_\n' + fileName)
         data = self.write_s.recv(1024)
@@ -126,7 +129,7 @@ class Proxy():
                     print('FILE WRITTEN.\n')
                     print ('CLEANING UP')
                     resendData = 'WRITTEN_\n' + fileName
-                    data = self.__resendToDirServer(resendData, host, port)
+                    data = self.__resendToDirServer(resendData)
                     if 'OK' in data:
                         return 'OK'
                     else:
@@ -153,9 +156,9 @@ class Proxy():
         self.fileServer_s.close()
         return file_data
 
-    def __resendToDirServer(self, data, host, port):
+    def __resendToDirServer(self, data):
         self.dirServer_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.dirServer_s.connect((host, port))
+        self.dirServer_s.connect((dirHost, dirPort))
         print ('Connected to file server.\n')
         self.dirServer_s.sendall(data)
         file_data = self.dirServer_s.recv(1024)
