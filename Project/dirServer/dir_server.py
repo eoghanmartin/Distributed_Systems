@@ -3,7 +3,7 @@ import SocketServer, subprocess, sys, pdb
 from threading import Thread
 import socket
 
-HOST = 'localhost'
+HOST = '127.0.0.1'
 PORT = 2000
 
 
@@ -11,17 +11,16 @@ HASHED_FILE_ADDRESSES = []
 HASHED_FILE_PORTS = []
 HASHED_FILE_FILES = []
 HASHED_FILE_LOCKS = []
-WRITE_PORT = ''
-WRITE_ADDRESS = ''
+HOSTS = []
+PORTS = []
 
 class SingleTCPHandler(SocketServer.BaseRequestHandler):
     def handle(self):
-        global WRITE_ADDRESS
-        global WRITE_PORT
         data = self.request.recv(1024)
         commands = data.split('\n')
         if data:
             print ('\n\nDATA IN:' + data)
+        ##########
         ## OPEN ##
         if "OPEN_" in data:
             print('SEARCHING FOR FILE...\n')
@@ -37,17 +36,30 @@ class SingleTCPHandler(SocketServer.BaseRequestHandler):
             else:
                 print('ERROR: Could not find file.\n')
                 self.request.send("ERROR: Could not find file.\n")
+        ############
         ## CREATE ##
         elif "CREATE_" in data:
             print('SEARCHING FOR SERVER...\n')
             print (HASHED_FILE_LOCKS)
             hashedFileName = str(hash(commands[1]))
-            file_host = 'localhost'
-            file_port = '8888'
-            returnData = hashedFileName + '\n' + file_host + '\n' + file_port
+            file_host = HOSTS[0]
+            file_port = PORTS[0]
+            returnData = hashedFileName + '\n' + file_host + '\n' + str(file_port)
             print returnData
             newFileCreated(hashedFileName, file_host, file_port, 'FileDetails.txt')
             self.request.send(returnData)
+        ## REPLICATE CREATED FILE ##
+        elif "CREAT_ED" in data:
+            print('REPLICATING CREATED FILE...\n')
+            hashedFileName = str(commands[1])
+            file_host = commands[2]
+            file_port = commands[3].replace("'","")
+            replicated = replicateFilesOnSystem(file_host, int(file_port), hashedFileName)
+            if 'OK' in replicated:
+                self.request.send("OK")
+            else:
+                self.request.send("ERROR: Trouble replicating files.")
+        ############
         ## DELETE ##
         elif "DELETE_" in data:
             print('SEARCHING FOR SERVER...\n')
@@ -70,9 +82,9 @@ class SingleTCPHandler(SocketServer.BaseRequestHandler):
                 print('ERROR: (Delete) Could not find file.\n')
                 self.request.send("ERROR: (Delete) Could not find file.\n")
         ## DELETE UNLOCK ##
-        elif "DELETED_" in data:
+        elif "DELETION_" in data:
             print('SEARCHING FOR SERVER...\n')
-            hashedFileName = str(hash(commands[1]))
+            hashedFileName = str(commands[1])
             lock_clear = False
             file_port = self.getPort(hashedFileName)
             file_host = self.getAddress(hashedFileName)
@@ -83,7 +95,7 @@ class SingleTCPHandler(SocketServer.BaseRequestHandler):
                     print ('DELETING: ' + returnData)
                     print (HASHED_FILE_LOCKS)
                     print (HASHED_FILE_FILES)
-                    removeFileDeleted(hashedFileName, file_port, file_host)
+                    #removeFileDeleted(hashedFileName, file_port, file_host)
                     self.request.send(returnData)
                 else:
                     print('ERROR: (Delete) Problem with locking file.\n')
@@ -91,6 +103,7 @@ class SingleTCPHandler(SocketServer.BaseRequestHandler):
             else:
                 print('ERROR: (Delete) Could not find file.\n')
                 self.request.send("ERROR: (Delete) Could not find file.\n")
+        ###########
         ## WRITE ##
         elif "WRITE_" in data:
             print('SEARCHING FOR FILE...\n')
@@ -114,15 +127,17 @@ class SingleTCPHandler(SocketServer.BaseRequestHandler):
         ## WRITE UNLOCK ##
         elif "WRITTEN_" in data:
             print('SEARCHING FOR FILE...\n')
-            hashedFileName = str(hash(commands[1]))
+            hashedFileName = str(commands[1])
             lock_clear = False
             file_port = self.getPort(hashedFileName)
             file_host = self.getAddress(hashedFileName)
+            print ('HOST AND PORT: ' + file_host + ' ' + file_port)
             if file_port != '' and file_host != '':
                 lock_clear = self.clearLock(file_port, file_host, hashedFileName)
                 if lock_clear == True:
                     returnData = hashedFileName + '\n' + file_host + '\n' + file_port
                     print ('FOUND AND UNLOCKED FILE: ' + returnData)
+                    replicated = replicateFilesOnSystem(file_host, int(file_port), hashedFileName)
                     self.request.send('OK')
                 else:
                     print('ERROR: (Written) Problem with unlocking file.\n')
@@ -134,6 +149,8 @@ class SingleTCPHandler(SocketServer.BaseRequestHandler):
             print('COMMAND NOT RECOGNISED\n')
             self.request.send('ERROR: Command not recognised.\n')
         self.request.close()
+
+    ###############
 
     def getPort(self, hashedFileName):
         file_port = ''
@@ -159,7 +176,6 @@ class SingleTCPHandler(SocketServer.BaseRequestHandler):
 
     def setLock(self, port, host, name):
         y = 0
-        #pdb.set_trace()
         for a in HASHED_FILE_ADDRESSES:
             if a == host:
                 p = HASHED_FILE_PORTS[y]
@@ -197,15 +213,30 @@ def newFileCreated(newFileName, newFileHost, newFilePort, fileDetailsFile):
     with open(fileDetailsFile) as f:
         file_details = f.readlines()
     f.close()
-    if file_details:
+    if file_details and 'ERROR:' not in newFileName:
         with open(fileDetailsFile, "a") as fileDetails:
-            fileDetails.write("\n" + newFileName + "   '" + newFileHost + "' " + newFilePort)
+            fileDetails.write("\n" + newFileName + "   '" + newFileHost + "' " + str(newFilePort))
     else:
         with open(fileDetailsFile, "a") as fileDetails:
             fileDetails.write(newFileName + "   '" + newFileHost + "' " + newFilePort)
     fileDetails.close()
     HASHED_FILE_LOCKS.append(0)
-    setupFilesList(fileDetailsFile)
+    updateFilesList(fileDetailsFile)
+
+def replicateFilesOnSystem(fileHost, filePort, fileName):
+    rep_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    i = 0
+    for server in PORTS:
+        host = HOSTS[i]
+        port = PORTS[i]
+        if port != filePort:
+            rep_s.connect((host, port))
+            print ('Connected to file server.\n')
+            rep_data = 'REPLICATE_' + '\n' + host + '\n' + str(port) + '\n' + fileName
+            rep_s.sendall(rep_data)
+            rep_s.close()
+        i = i + 1
+    return 'OK'
 
 def removeFileDeleted(hashedFileName, file_port, file_host):
     with open('FileDetails.txt') as fileIn:
@@ -214,18 +245,14 @@ def removeFileDeleted(hashedFileName, file_port, file_host):
         if hashedFileName in f:
             file_details.remove(f)
     fileIn.close()
-    #pdb.set_trace()
     fileInAgain = open('FileDetails.txt', 'w')
     fileInAgain.truncate()
     for f in file_details:
         fileInAgain.write(f)
     fileInAgain.close()
-    setupFilesList('FileDetails.txt')
-            
+    updateFilesList('FileDetails.txt')
 
-def setupFilesList(fileDetailsFile):
-    global WRITE_ADDRESS
-    global WRITE_PORT
+def updateFilesList(fileDetailsFile):
     del HASHED_FILE_ADDRESSES[:]
     del HASHED_FILE_PORTS[:]
     del HASHED_FILE_FILES[:]
@@ -239,25 +266,59 @@ def setupFilesList(fileDetailsFile):
             HASHED_FILE_ADDRESSES.append(details[1].replace("'",""))
             HASHED_FILE_PORTS.append(details[2].replace("'",""))
             HASHED_FILE_FILES.append(details[0].replace("'",""))
-            WRITE_ADDRESS = details[1].replace("'","")
-            WRITE_PORT = details[2].replace("'","")
             
 
-def setupLocks():
-    global HASHED_FILE_LOCKS
-    i = 0
-    for a in HASHED_FILE_ADDRESSES:
-        HASHED_FILE_LOCKS.append(0)
-        i=i+1
+def setupFilesList(fileDetailsFile, fileServersFile):
+    global HOSTS
+    global PORTS
+    del HOSTS[:]
+    del PORTS[:]
+    clearFileDetails(fileDetailsFile)
+    with open(fileServersFile) as s:
+        file_servers = s.readlines()
+    s.close()
+    for servers in file_servers:
+        details = servers.split()
+        host = details[0].replace("'", "")
+        port = int(details[1].replace("'", ""))
+        PORTS.append(port)
+        HOSTS.append(host)
+        data = host + '\n' + str(port)
+        filesFromServer = sendToFileServer(data)
+        if filesFromServer:
+            files = filesFromServer.split('\n')
+            for f in files:
+                if 'ERROR:' not in f:
+                    newFileCreated(f, details[0], details[1], fileDetailsFile)
+        else:
+            print ('No files on server with port ' + str(port) + ' and add ress ' + host + '.')
+
+def clearFileDetails(fileDetailsFile):
+    fileInAgain = open(fileDetailsFile, 'w')
+    fileInAgain.write('')
+    fileInAgain.close()
+
+def sendToFileServer(data):
+        fileServer_s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        address = data.split('\n')
+        host = address[0].replace("'", "")
+        port = int(address[1].replace("'", ""))
+        fileServer_s.connect((host, port))
+        print ('Connected to file server.\n')
+        data = 'FILES_'
+        fileServer_s.sendall(data)
+        file_data = fileServer_s.recv(1024)
+        fileServer_s.close()
+        return file_data
 
 if __name__ == "__main__":
 
-    setupFilesList('FileDetails.txt')
-    setupLocks()
-    print (HASHED_FILE_LOCKS)
+    setupFilesList('FileDetails.txt', 'FileServers.txt')
+    print (HASHED_FILE_FILES)
+    print (HASHED_FILE_ADDRESSES)
     server = SimpleServer((HOST, PORT), SingleTCPHandler)
 
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        sys.exikt(0)
+        sys.exit(0)
