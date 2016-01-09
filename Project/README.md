@@ -15,6 +15,9 @@ Locking is impolemented in the **dir_server.py** file. A lock is associated with
 ### 3. Replication
 Upon any write operation, all files are replicated across the system.
 
+### System Architecture
+![alt tag](https://raw.githubusercontent.com/eoghanmartin/Distributed_Systems/master/Project/components.png)
+
 #### Limitations
 * Replicated files are not locked or deleted.
 * Currently: All new file are created on a single server. A file server election algorithm has to be implemented here.
