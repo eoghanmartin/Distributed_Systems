@@ -1,5 +1,8 @@
 # A Basic Distributed File System
 
+#### Requirements
+* Python 2.7
+
 ## Features
 1. Transparent Distributed File System
 2. Locking on Writes
