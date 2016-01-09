@@ -1,3 +1,5 @@
+# echo_client.py
+#import socket
 
 if __name__ == "__main__":
     from ClientProxy import Proxy
