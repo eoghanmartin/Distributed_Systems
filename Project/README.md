@@ -32,3 +32,5 @@ Upon any write operation, all files are replicated across the system.
 * Replicated files are not locked or deleted.
 * Currently: All new file are created on a single server. A file server election algorithm has to be implemented here.
 * Currently: The system is not available to use on a distributed system across multiple machines.
+* Currently: Code functionality is not extrapolated out into structured modular components.
+* Currently: Text files are used to maintain the directory of files in the system in a plain text format. As a result, these text files have to be manually parsed out everytime a maintenance job is to be excecuted. This is messy and not consistent. TODO: Use a lightweight database and JSON markup to format messages.
