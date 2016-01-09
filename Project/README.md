@@ -20,11 +20,13 @@ Upon any write operation, all files are replicated across the system.
 
 ### System Architecture
 ![alt tag](https://raw.githubusercontent.com/eoghanmartin/Distributed_Systems/master/Project/components.png)
+
 1. Directory server initialised and requests all of the files on file servers. Updates a directory with respective files and locations.
 2. Client makes a request to directory server. Directory server finds the location of the file in question and returns. If a lock is required the corresponding file is locked in the **dir_server.py** directory (declining request if the file is locked).
 3. Client sends a request to the file server that the directory server informed it about with a message containing the operation required. File server operates this function and returns an 'OK' message.
-4. If operation was executed as expected, the client now informs the directory server that the updates have been performed correctly (unless a simple READ was performed). The directory server may unlock the corresponding file or message all other file servers to inform them of a new write/update. This message contains the address of the primary file server and the name of the file in question. Each slave file server will hence use this information to ask the primary file server for the contents of the updated file. They will then either create the file on their server or update a file that's already on their server (replication).
-5. 
+4. If operation was executed as expected, the client now informs the directory server that the updates have been performed correctly (unless a simple READ was performed).
+5. The directory server may unlock the corresponding file and/or message all other file servers to inform them of a new write/update.
+6. This message contains the address of the primary file server and the name of the file in question. Each slave file server will hence use this information to ask the primary file server for the contents of the updated file. They will then either create the file on their server or update a file that's already on their server (replication). Next time that the directory server request all files on the file servers the replications will be added to the directory.
 
 #### Limitations
 * Replicated files are not locked or deleted.
