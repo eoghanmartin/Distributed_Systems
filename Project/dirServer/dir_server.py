@@ -6,7 +6,6 @@ import socket
 HOST = '127.0.0.1'
 PORT = 2000
 
-
 HASHED_FILE_ADDRESSES = []
 HASHED_FILE_PORTS = []
 HASHED_FILE_FILES = []
